@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+.claw-wrap {
+  font-family: 'DM Sans', -apple-system, sans-serif;
+  width: 380px; background: #fff9f7; color: #331008;
+  border-radius: 16px; overflow: hidden;
+  box-shadow: 0 12px 48px rgba(0,0,0,.13), 0 2px 8px rgba(0,0,0,.07);
+  margin: 0 auto;
+}
+.hdr {
+  background: #cc2200; padding: 13px 16px 11px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid rgba(255,120,60,.2); position: relative; overflow: hidden;
+}
+.hdr::after { content:''; position:absolute; top:0; left:0; right:0; height:1px; background: linear-gradient(90deg,transparent,rgba(255,200,150,.3),transparent); }
+.hdr-left { display:flex; flex-direction:column; gap:2px; }
+.hdr-title { font-family:'Nunito',sans-serif; font-size:15px; font-weight:800; color:#fff; display:flex; align-items:center; gap:8px; }
+.hdr-crab { width:32px; height:32px; border-radius:50%; background:#e84020; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+.hdr-sub { font-size:9px; letter-spacing:.12em; text-transform:uppercase; color:rgba(255,200,160,.55); font-weight:600; padding-left:2px; }
+.mode-toggle { display:flex; gap:3px; background:rgba(0,0,0,.2); border-radius:8px; padding:3px; flex-shrink:0; }
+.mode-btn { padding:4px 10px; border-radius:6px; border:none; font-size:10px; font-weight:800; font-family:'Nunito',sans-serif; cursor:pointer; letter-spacing:.04em; background:transparent; color:rgba(255,255,255,.5); transition:all .15s; }
+.mode-btn.active { background:#fff; color:#cc2200; }
+.body { padding:12px 14px 14px; display:flex; flex-direction:column; gap:9px; }
+.form-panel { display:none; flex-direction:column; gap:9px; }
+.form-panel.active { display:flex; }
+.field { display:flex; flex-direction:column; gap:3px; }
+.lbl { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:#cc2200; }
+.lbl.err { color:#cc0000; }
+.name-static { padding:6px 0 2px; }
+.name-val { font-size:13px; font-weight:700; color:#cc2200; }
+.name-unset { font-size:11px !important; font-weight:400 !important; color:rgba(160,70,50,.4) !important; }
+select, input[type="text"], textarea {
+  width:100%; background:#fff; border:1px solid rgba(200,70,30,.15);
+  border-radius:7px; padding:7px 10px; font-size:12px; font-family:inherit;
+  outline:none; color:#331008; -webkit-appearance:none; appearance:none;
+}
+select:focus, input:focus, textarea:focus { border-color:rgba(180,30,10,.4); box-shadow:0 0 0 3px rgba(200,40,10,.08); }
+textarea { resize:none; height:58px; }
+input::placeholder, textarea::placeholder { color:rgba(160,70,50,.38); }
+.input-wrap { position:relative; display:flex; align-items:center; }
+.input-wrap input { padding-right:32px; }
+.paste-btn { position:absolute; right:6px; background:none; border:none; cursor:pointer; padding:3px 4px; border-radius:4px; color:rgba(180,60,30,.35); font-size:13px; line-height:1; display:flex; align-items:center; justify-content:center; }
+.paste-btn:hover { color:#cc2200; background:rgba(200,60,20,.08); }
+.flags { display:flex; gap:7px; }
+.flag-toggle { flex:1; display:flex; align-items:center; justify-content:center; gap:5px; padding:7px 0; border:1px solid rgba(200,70,30,.15); border-radius:7px; font-size:11px; font-weight:700; color:rgba(150,60,30,.5); cursor:pointer; user-select:none; background:#fff; }
+.flag-toggle.active { background:#cc2200; border-color:transparent; color:#fff; }
+.flag-dot { width:6px; height:6px; border-radius:50%; background:rgba(180,70,40,.22); flex-shrink:0; }
+.flag-toggle.active .flag-dot { background:rgba(255,255,255,.45); }
+.yesno { display:flex; gap:7px; }
+.yesno-btn { flex:1; padding:7px 0; border-radius:7px; border:1px solid rgba(200,70,30,.15); font-size:11px; font-weight:700; color:rgba(150,60,30,.5); cursor:pointer; user-select:none; background:#fff; text-align:center; }
+.yesno-btn.active { background:#cc2200; border-color:transparent; color:#fff; }
+.extra-links-toggle { font-size:10px; font-weight:700; color:rgba(180,50,20,.5); background:none; border:none; cursor:pointer; font-family:inherit; text-align:left; padding:0; letter-spacing:.04em; text-transform:uppercase; }
+.extra-links { display:none; flex-direction:column; gap:7px; margin-top:2px; }
+.extra-links.open { display:flex; }
+.send-btn { width:100%; margin-top:2px; padding:10px; background:#cc2200; color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:800; font-family:'Nunito',sans-serif; cursor:pointer; letter-spacing:.02em; }
+.send-btn:hover { opacity:.88; }
+.send-btn:disabled { opacity:.4; cursor:default; }
+.status { font-size:11px; text-align:center; min-height:14px; color:rgba(150,60,30,.5); }
+.status.success { color:#cc2200; }
+.status.error { color:#cc0000; }
+.divider { border:none; border-top:1px solid rgba(200,70,30,.1); margin:4px 0 0; }
+.settings-toggle { font-size:11px; color:rgba(160,60,30,.38); cursor:pointer; background:none; border:none; padding:7px 14px 0; width:100%; text-align:left; font-family:inherit; }
+.settings-toggle:hover { color:#cc2200; }
+.settings-area { padding:9px 14px 0; display:none; }
+.settings-area.open { display:block; }
+.save-btn { margin-top:8px; padding:7px 14px; background:rgba(204,34,0,.08); border:1px solid rgba(200,70,30,.2); border-radius:7px; font-size:12px; font-weight:700; cursor:pointer; color:#cc2200; font-family:inherit; }
+.save-btn:hover { background:rgba(204,34,0,.14); }
+</style>
+
+<script>
+var WEBHOOK_PRIVATE      = "https://discord.com/api/webhooks/1492250733343670502/YC3Vmq4cZ-zcwNZqRfIcVVfxwOCm5pk_NoqKKVErH__8uOGr2sdi5dTE4NBhipTuEuUq";
+var WEBHOOK_LINK_PUBLIC  = "https://discord.com/api/webhooks/1492251793885757562/5zdE__v6HimzP_zQd5RJ8Z4_A2LaPlgH4qhptFkQLK-s6v-nc7PQGlKH8HrNbAPvURgk";
+var WEBHOOK_TREND_PUBLIC = "https://discord.com/api/webhooks/1492989290903502959/gKC4ye5peN9p30w5BDT3l1gtCjhDOodehA_IrSJwVrsaCJxC8RFX3yYtyJYcUvZggNry";
+var NAMES = { bwnton:"Benton", daynadoes:"Dayna", dejaih:"Dejaih", qwnjanine6170:"Janine", fwick:"Ryan" };
+var clawFlags = { gr: false, rs: false };
+var clawFC = null;
+var clawUser = null;
+var clawExtraOpen = false;
+
+function clawG(id) { return document.getElementById(id); }
+
+function clawSetMode(mode) {
+  clawG('panel-link').className  = 'form-panel' + (mode==='link'  ? ' active' : '');
+  clawG('panel-trend').className = 'form-panel' + (mode==='trend' ? ' active' : '');
+  clawG('btn-link').className    = 'mode-btn'   + (mode==='link'  ? ' active' : '');
+  clawG('btn-trend').className   = 'mode-btn'   + (mode==='trend' ? ' active' : '');
+  clawG('hdr-sub').textContent   = mode==='link' ? 'drop your catch' : 'drop the trend';
+  try { localStorage.setItem('claw-mode', mode); } catch(e){}
+}
+
+function clawToggleFlag(id, key) {
+  clawFlags[key] = !clawFlags[key];
+  clawG(id).className = 'flag-toggle' + (clawFlags[key] ? ' active' : '');
+  clawSaveDraft();
+}
+
+function clawSetFC(val) {
+  clawFC = val;
+  clawG('fc-yes').className = 'yesno-btn' + (val==='Yes' ? ' active' : '');
+  clawG('fc-no').className  = 'yesno-btn' + (val==='No'  ? ' active' : '');
+  clawSaveTrendDraft();
+}
+
+function clawToggleExtra() {
+  clawExtraOpen = !clawExtraOpen;
+  clawG('extra-links').className = 'extra-links' + (clawExtraOpen ? ' open' : '');
+  clawG('extra-lbl').textContent = clawExtraOpen ? '— more links' : '＋ more links';
+}
+
+function clawToggleSettings() {
+  var a = clawG('settings-area');
+  a.className = a.className.indexOf('open') > -1 ? 'settings-area' : 'settings-area open';
+}
+
+function clawSaveSettings() {
+  var val = clawG('settings-username').value;
+  if (!val) { clawStatus('pick a name first.', 'error', 'link'); return; }
+  try { localStorage.setItem('claw-settings', JSON.stringify({username:val})); } catch(e){}
+  clawApplyName(val);
+  clawG('settings-area').className = 'settings-area';
+}
+
+function clawApplyName(username) {
+  clawUser = username;
+  var d = NAMES[username];
+  clawG('name-display').textContent       = d;
+  clawG('name-display-trend').textContent = d;
+  clawG('name-display').className       = 'name-val';
+  clawG('name-display-trend').className = 'name-val';
+  clawG('header-name').textContent = 'The Claw — ' + d;
+}
+
+function clawPaste(targetId, btn) {
+  navigator.clipboard.readText().then(function(text) {
+    clawG(targetId).value = text.trim();
+    btn.textContent = '✓'; btn.style.color = '#cc2200';
+    setTimeout(function(){ btn.textContent = '⎘'; btn.style.color = ''; }, 1200);
+  }).catch(function() {
+    btn.textContent = '!';
+    setTimeout(function(){ btn.textContent = '⎘'; }, 1200);
+  });
+}
+
+function clawSaveDraft() {
+  try { localStorage.setItem('claw-draft', JSON.stringify({
+    url: clawG('link-url').value, category: clawG('category').value,
+    suplink: clawG('suplink').value, context: clawG('context').value,
+    gr: clawFlags.gr, rs: clawFlags.rs
+  })); } catch(e){}
+}
+
+function clawSaveTrendDraft() {
+  try { localStorage.setItem('claw-trend-draft', JSON.stringify({
+    name:  clawG('trend-name').value,  desc:  clawG('trend-desc').value,
+    link1: clawG('trend-link1').value, link2: clawG('trend-link2').value,
+    link3: clawG('trend-link3').value, link4: clawG('trend-link4').value,
+    link5: clawG('trend-link5').value, link6: clawG('trend-link6').value,
+    fc: clawFC
+  })); } catch(e){}
+}
+
+function clawStatus(msg, type, form) {
+  var el = clawG('status-' + form);
+  el.textContent = msg;
+  el.className = 'status' + (type ? ' ' + type : '');
+}
+
+async function clawSendLink() {
+  if (!clawUser) {
+    clawG('name-display').textContent = 'not set — open ⚙ settings';
+    clawG('name-display').className = 'name-val name-unset';
+    clawG('settings-area').className = 'settings-area open';
+    clawStatus('open ⚙ settings to set your name first', 'error', 'link'); return;
+  }
+  var url = clawG('link-url').value.trim();
+  if (!url) { clawStatus('enter a url first.', 'error', 'link'); return; }
+  if (!clawG('category').value) { clawStatus('pick a category first.', 'error', 'link'); return; }
+  var cat = clawG('category').value;
+  var sup = clawG('suplink').value.trim();
+  var ctx = clawG('context').value.trim();
+  var gr  = clawFlags.gr ? 'true' : 'false';
+  var rs  = clawFlags.rs ? 'true' : 'false';
+  var pub = '🦀 **New Link Just Dropped**\nSubmitted By: ' + NAMES[clawUser] + '\nURL: ' + url + '\nCategory: ' + cat + '\nSuplink: ' + (sup||'—') + '\nContext: ' + (ctx||'—') + '\nFlags: Good Read - ' + gr + ', Resource - ' + rs;
+  var prv = 'LINK: {\\"submitted_by\\":\\"' + clawUser + '\\",\\"url\\":\\"' + url + '\\",\\"category\\":\\"' + cat + '\\",\\"suplink\\":\\"' + sup + '\\",\\"context\\":\\"' + ctx + '\\",\\"good_read\\":\\"' + gr + '\\",\\"resource\\":\\"' + rs + '\\"}';
+  clawG('send-link').disabled = true;
+  clawStatus('casting the net...', '', 'link');
+  try {
+    var r = await Promise.all([
+      fetch(WEBHOOK_PRIVATE,     {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({content:prv})}),
+      fetch(WEBHOOK_LINK_PUBLIC, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({content:pub})})
+    ]);
+    if (r[0].ok && r[1].ok) {
+      clawStatus('🦀 catch delivered!', 'success', 'link');
+      ['link-url','suplink','context'].forEach(function(id){ clawG(id).value=''; });
+      clawG('category').value = '';
+      clawFlags = {gr:false, rs:false};
+      clawG('toggle-gr').className = 'flag-toggle';
+      clawG('toggle-rs').className = 'flag-toggle';
+      try { localStorage.removeItem('claw-draft'); } catch(e){}
+    } else { clawStatus('send error — try again', 'error', 'link'); }
+  } catch(e) { clawStatus('the crab dropped it 😔', 'error', 'link'); }
+  clawG('send-link').disabled = false;
+}
+
+async function clawSendTrend() {
+  if (!clawUser) {
+    clawG('name-display-trend').textContent = 'not set — open ⚙ settings';
+    clawG('name-display-trend').className = 'name-val name-unset';
+    clawG('settings-area').className = 'settings-area open';
+    clawStatus('open ⚙ settings to set your name first', 'error', 'trend'); return;
+  }
+  var name = clawG('trend-name').value.trim();
+  if (!name) { clawStatus('enter a trend name first.', 'error', 'trend'); return; }
+  if (!clawFC) { clawStatus('set fresh catch yes or no.', 'error', 'trend'); return; }
+  var desc = clawG('trend-desc').value.trim();
+  var l1=clawG('trend-link1').value.trim(), l2=clawG('trend-link2').value.trim(),
+      l3=clawG('trend-link3').value.trim(), l4=clawG('trend-link4').value.trim(),
+      l5=clawG('trend-link5').value.trim(), l6=clawG('trend-link6').value.trim();
+  var pub = '🌊 **New Trend Just Dropped!**\nName: '+name+'\nSubmitted By: '+NAMES[clawUser]+'\nDescription: '+(desc||'—')+'\nPrimary Link: '+(l1||'—')+'\nFresh Catch: '+clawFC+'\nExtra Links: '+([l2,l3,l4,l5,l6].filter(Boolean).join(', ')||'—');
+  var prv = 'Trend Name: '+name+'%%\nTrend Description: '+desc+'%%\n[FC: '+clawFC+']%%\n'+l1+'%%\n'+l2+'%%\n'+l3+'%%\n'+l4+'%%\n'+l5+'%%\n'+l6+'%%\n[BY: '+clawUser+']';
+  clawG('send-trend').disabled = true;
+  clawStatus('riding the wave...', '', 'trend');
+  try {
+    var r = await Promise.all([
+      fetch(WEBHOOK_PRIVATE,      {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({content:prv})}),
+      fetch(WEBHOOK_TREND_PUBLIC, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({content:pub})})
+    ]);
+    if (r[0].ok && r[1].ok) {
+      clawStatus('🌊 trend dropped!', 'success', 'trend');
+      ['trend-name','trend-desc','trend-link1','trend-link2','trend-link3','trend-link4','trend-link5','trend-link6'].forEach(function(id){ clawG(id).value=''; });
+      clawFC = null;
+      clawG('fc-yes').className = 'yesno-btn';
+      clawG('fc-no').className  = 'yesno-btn';
+      try { localStorage.removeItem('claw-trend-draft'); } catch(e){}
+    } else { clawStatus('send error — try again', 'error', 'trend'); }
+  } catch(e) { clawStatus('the wave crashed 😔', 'error', 'trend'); }
+  clawG('send-trend').disabled = false;
+}
+
+// Restore from localStorage on load
+window.addEventListener('load', function() {
+  try {
+    var s = JSON.parse(localStorage.getItem('claw-settings')||'{}');
+    if (s.username && NAMES[s.username]) { clawApplyName(s.username); clawG('settings-username').value = s.username; }
+    var m = localStorage.getItem('claw-mode');
+    if (m) clawSetMode(m);
+    var d = JSON.parse(localStorage.getItem('claw-draft')||'{}');
+    if (d.url)      clawG('link-url').value  = d.url;
+    if (d.category) clawG('category').value  = d.category;
+    if (d.suplink)  clawG('suplink').value   = d.suplink;
+    if (d.context)  clawG('context').value   = d.context;
+    if (d.gr) { clawFlags.gr = true; clawG('toggle-gr').className = 'flag-toggle active'; }
+    if (d.rs) { clawFlags.rs = true; clawG('toggle-rs').className = 'flag-toggle active'; }
+    var t = JSON.parse(localStorage.getItem('claw-trend-draft')||'{}');
+    if (t.name)  clawG('trend-name').value  = t.name;
+    if (t.desc)  clawG('trend-desc').value  = t.desc;
+    if (t.link1) clawG('trend-link1').value = t.link1;
+    if (t.link2) clawG('trend-link2').value = t.link2;
+    if (t.link3) clawG('trend-link3').value = t.link3;
+    if (t.link4) clawG('trend-link4').value = t.link4;
+    if (t.link5) clawG('trend-link5').value = t.link5;
+    if (t.link6) clawG('trend-link6').value = t.link6;
+    if (t.fc) clawSetFC(t.fc);
+    if (t.link4||t.link5||t.link6) { clawExtraOpen=true; clawG('extra-links').className='extra-links open'; clawG('extra-lbl').textContent='— more links'; }
+  } catch(e){}
+});
+</script>
+</head>
+<body>
+<div class="claw-wrap">
+  <div class="hdr">
+    <div class="hdr-left">
+      <div class="hdr-title">
+        <div class="hdr-crab">🦀</div>
+        <span id="header-name">The Claw</span>
+      </div>
+      <div class="hdr-sub" id="hdr-sub">drop your catch</div>
+    </div>
+    <div class="mode-toggle">
+      <button class="mode-btn active" id="btn-link"  onclick="clawSetMode('link')">LINK</button>
+      <button class="mode-btn"        id="btn-trend" onclick="clawSetMode('trend')">TREND</button>
+    </div>
+  </div>
+
+  <div class="body">
+
+    <!-- LINK FORM -->
+    <div class="form-panel active" id="panel-link">
+      <div class="field">
+        <div class="lbl">👤 submitted by</div>
+        <div class="name-static"><span id="name-display" class="name-val name-unset">not set — open ⚙ settings</span></div>
+      </div>
+      <div class="field">
+        <div class="lbl">🔗 url</div>
+        <div class="input-wrap">
+          <input type="text" id="link-url" placeholder="https://..." oninput="clawSaveDraft()" />
+          <button class="paste-btn" onclick="clawPaste('link-url',this)" title="Paste">⎘</button>
+        </div>
+      </div>
+      <div class="field">
+        <div class="lbl">🪣 category</div>
+        <select id="category" onchange="clawSaveDraft()">
+          <option value="">— select a category —</option>
+          <option>Viral Topics</option><option>Brand News</option><option>Brand W</option>
+          <option>Brand L</option><option>Industry News</option><option>Hey, So That's Bad!</option>
+          <option>Aesthetic</option><option>Olympics</option><option>Entertainment</option>
+          <option>Shell 1</option><option>Shell 2</option><option>End Link</option>
+        </select>
+      </div>
+      <div class="field">
+        <div class="lbl">🪝 suplink</div>
+        <div class="input-wrap">
+          <input type="text" id="suplink" placeholder="supplemental url..." oninput="clawSaveDraft()" />
+          <button class="paste-btn" onclick="clawPaste('suplink',this)" title="Paste">⎘</button>
+        </div>
+      </div>
+      <div class="field">
+        <div class="lbl">🌊 context</div>
+        <textarea id="context" placeholder="what's the catch?" oninput="clawSaveDraft()"></textarea>
+      </div>
+      <div class="field">
+        <div class="lbl">🚩 flags</div>
+        <div class="flags">
+          <div class="flag-toggle" id="toggle-gr" onclick="clawToggleFlag('toggle-gr','gr')"><span class="flag-dot"></span> Good Read</div>
+          <div class="flag-toggle" id="toggle-rs" onclick="clawToggleFlag('toggle-rs','rs')"><span class="flag-dot"></span> Resource</div>
+        </div>
+      </div>
+      <button class="send-btn" id="send-link" onclick="clawSendLink()">🦀 Drop the Claw</button>
+      <div class="status" id="status-link"></div>
+    </div>
+
+    <!-- TREND FORM -->
+    <div class="form-panel" id="panel-trend">
+      <div class="field">
+        <div class="lbl">👤 submitted by</div>
+        <div class="name-static"><span id="name-display-trend" class="name-val name-unset">not set — open ⚙ settings</span></div>
+      </div>
+      <div class="field">
+        <div class="lbl">📛 trend name</div>
+        <input type="text" id="trend-name" placeholder="what's the trend called?" oninput="clawSaveTrendDraft()" />
+      </div>
+      <div class="field">
+        <div class="lbl">📝 description</div>
+        <textarea id="trend-desc" placeholder="describe the trend..." oninput="clawSaveTrendDraft()"></textarea>
+      </div>
+      <div class="field">
+        <div class="lbl">🔗 primary link</div>
+        <div class="input-wrap">
+          <input type="text" id="trend-link1" placeholder="https://..." oninput="clawSaveTrendDraft()" />
+          <button class="paste-btn" onclick="clawPaste('trend-link1',this)" title="Paste">⎘</button>
+        </div>
+      </div>
+      <div class="field">
+        <div class="lbl">🌊 fresh catch</div>
+        <div class="yesno">
+          <div class="yesno-btn" id="fc-yes" onclick="clawSetFC('Yes')">Yes</div>
+          <div class="yesno-btn" id="fc-no"  onclick="clawSetFC('No')">No</div>
+        </div>
+      </div>
+      <div class="field">
+        <div class="lbl">🔗 extra links</div>
+        <div class="input-wrap">
+          <input type="text" id="trend-link2" placeholder="link 2..." oninput="clawSaveTrendDraft()" />
+          <button class="paste-btn" onclick="clawPaste('trend-link2',this)" title="Paste">⎘</button>
+        </div>
+        <div class="input-wrap" style="margin-top:7px;">
+          <input type="text" id="trend-link3" placeholder="link 3..." oninput="clawSaveTrendDraft()" />
+          <button class="paste-btn" onclick="clawPaste('trend-link3',this)" title="Paste">⎘</button>
+        </div>
+      </div>
+      <div class="field">
+        <button class="extra-links-toggle" onclick="clawToggleExtra()"><span id="extra-lbl">＋ more links</span></button>
+        <div class="extra-links" id="extra-links">
+          <div class="input-wrap">
+            <input type="text" id="trend-link4" placeholder="link 4..." oninput="clawSaveTrendDraft()" />
+            <button class="paste-btn" onclick="clawPaste('trend-link4',this)" title="Paste">⎘</button>
+          </div>
+          <div class="input-wrap">
+            <input type="text" id="trend-link5" placeholder="link 5..." oninput="clawSaveTrendDraft()" />
+            <button class="paste-btn" onclick="clawPaste('trend-link5',this)" title="Paste">⎘</button>
+          </div>
+          <div class="input-wrap">
+            <input type="text" id="trend-link6" placeholder="link 6..." oninput="clawSaveTrendDraft()" />
+            <button class="paste-btn" onclick="clawPaste('trend-link6',this)" title="Paste">⎘</button>
+          </div>
+        </div>
+      </div>
+      <button class="send-btn" id="send-trend" onclick="clawSendTrend()">🌊 Drop the Trend</button>
+      <div class="status" id="status-trend"></div>
+    </div>
+
+  </div>
+
+  <hr class="divider">
+  <button class="settings-toggle" onclick="clawToggleSettings()">⚙ settings</button>
+  <div class="settings-area" id="settings-area">
+    <div class="field">
+      <label class="lbl">👤 your name</label>
+      <select id="settings-username">
+        <option value="">— select your name —</option>
+        <option value="bwnton">Benton</option>
+        <option value="daynadoes">Dayna</option>
+        <option value="dejaih">Dejaih</option>
+        <option value="qwnjanine6170">Janine</option>
+        <option value="fwick">Ryan</option>
+      </select>
+    </div>
+    <button class="save-btn" onclick="clawSaveSettings()">Save</button>
+  </div>
+</div>
+</body>
+</html>
