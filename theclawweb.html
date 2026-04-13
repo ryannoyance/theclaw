@@ -136,14 +136,41 @@ function clawApplyName(username) {
 }
 
 function clawPaste(targetId, btn) {
-  navigator.clipboard.readText().then(function(text) {
-    clawG(targetId).value = text.trim();
+  var target = clawG(targetId);
+  // Try modern clipboard API first
+  if (navigator.clipboard && navigator.clipboard.readText) {
+    navigator.clipboard.readText().then(function(text) {
+      target.value = text.trim();
+      target.dispatchEvent(new Event('input'));
+      btn.textContent = '✓'; btn.style.color = '#cc2200';
+      setTimeout(function(){ btn.textContent = '⎘'; btn.style.color = ''; }, 1200);
+    }).catch(function() {
+      clawPasteFallback(target, btn);
+    });
+  } else {
+    clawPasteFallback(target, btn);
+  }
+}
+
+function clawPasteFallback(target, btn) {
+  // Fallback: focus the input and let the user paste manually
+  target.focus();
+  var ok = document.execCommand('paste');
+  if (ok) {
     btn.textContent = '✓'; btn.style.color = '#cc2200';
     setTimeout(function(){ btn.textContent = '⎘'; btn.style.color = ''; }, 1200);
-  }).catch(function() {
-    btn.textContent = '!';
-    setTimeout(function(){ btn.textContent = '⎘'; }, 1200);
-  });
+  } else {
+    // Last resort: prompt
+    var text = prompt('Paste your URL here:');
+    if (text) {
+      target.value = text.trim();
+      target.dispatchEvent(new Event('input'));
+      btn.textContent = '✓'; btn.style.color = '#cc2200';
+      setTimeout(function(){ btn.textContent = '⎘'; btn.style.color = ''; }, 1200);
+    } else {
+      btn.textContent = '⎘';
+    }
+  }
 }
 
 function clawSaveDraft() {
