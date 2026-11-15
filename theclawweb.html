@@ -73,7 +73,13 @@ input::placeholder, textarea::placeholder { color:rgba(160,70,50,.38); }
 </style>
 
 <script>
-var WEBHOOK_PRIVATE      = "https://discord.com/api/webhooks/1492250733343670502/YC3Vmq4cZ-zcwNZqRfIcVVfxwOCm5pk_NoqKKVErH__8uOGr2sdi5dTE4NBhipTuEuUq";
+// Airtable "Intake: Discord bot webhook (links + trends)" automation — replaces the private Discord channel + Zapier.
+var AIRTABLE_INTAKE      = "https://hooks.airtable.com/workflows/v1/genericWebhook/appdZxHrsaZRxyx0H/wflkyWPE2b5E1vv6p/wtrEk4RITPU4MeyNq";
+// Browsers block a JSON POST to Airtable from this page (CORS), so send form fields in no-cors mode. Airtable parses them the same way.
+function clawToAirtable(data) {
+  return fetch(AIRTABLE_INTAKE, { method:'POST', mode:'no-cors', body:new URLSearchParams(data) })
+    .then(function(){ return { ok:true }; });
+}
 var WEBHOOK_LINK_PUBLIC  = "https://discord.com/api/webhooks/1492251793885757562/5zdE__v6HimzP_zQd5RJ8Z4_A2LaPlgH4qhptFkQLK-s6v-nc7PQGlKH8HrNbAPvURgk";
 var WEBHOOK_TREND_PUBLIC = "https://discord.com/api/webhooks/1492989290903502959/gKC4ye5peN9p30w5BDT3l1gtCjhDOodehA_IrSJwVrsaCJxC8RFX3yYtyJYcUvZggNry";
 var NAMES = { bwnton:"Benton", daynadoes:"Dayna", dejaih:"Dejaih", qwnjanine6170:"Janine", fwick:"Ryan" };
@@ -213,12 +219,12 @@ async function clawSendLink() {
   var gr  = clawFlags.gr ? 'true' : 'false';
   var rs  = clawFlags.rs ? 'true' : 'false';
   var pub = '🦀 **New Link Just Dropped**\nSubmitted By: ' + NAMES[clawUser] + '\nURL: ' + url + '\nCategory: ' + cat + '\nSuplink: ' + (sup||'—') + '\nContext: ' + (ctx||'—') + '\nFlags: Good Read - ' + gr + ', Resource - ' + rs;
-  var prv = 'LINK: {\\"submitted_by\\":\\"' + clawUser + '\\",\\"url\\":\\"' + url + '\\",\\"category\\":\\"' + cat + '\\",\\"suplink\\":\\"' + sup + '\\",\\"context\\":\\"' + ctx + '\\",\\"good_read\\":\\"' + gr + '\\",\\"resource\\":\\"' + rs + '\\"}';
+  var prv = { type:'link', source:'claw-web', submitted_by:clawUser, url:url, category:cat, suplink:sup, context:ctx, good_read:gr, resource:rs };
   clawG('send-link').disabled = true;
   clawStatus('casting the net...', '', 'link');
   try {
     var r = await Promise.all([
-      fetch(WEBHOOK_PRIVATE,     {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({content:prv})}),
+      clawToAirtable(prv),
       fetch(WEBHOOK_LINK_PUBLIC, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({content:pub})})
     ]);
     if (r[0].ok && r[1].ok) {
@@ -249,12 +255,12 @@ async function clawSendTrend() {
       l3=clawG('trend-link3').value.trim(), l4=clawG('trend-link4').value.trim(),
       l5=clawG('trend-link5').value.trim(), l6=clawG('trend-link6').value.trim();
   var pub = '🌊 **New Trend Just Dropped!**\nName: '+name+'\nSubmitted By: '+NAMES[clawUser]+'\nDescription: '+(desc||'—')+'\nPrimary Link: '+(l1||'—')+'\nFresh Catch: '+clawFC+'\nExtra Links: '+([l2,l3,l4,l5,l6].filter(Boolean).join(', ')||'—');
-  var prv = 'Trend Name: '+name+'%%\nTrend Description: '+desc+'%%\n[FC: '+clawFC+']%%\n'+l1+'%%\n'+l2+'%%\n'+l3+'%%\n'+l4+'%%\n'+l5+'%%\n'+l6+'%%\n[BY: '+clawUser+']';
+  var prv = { type:'trend', source:'claw-web', submitted_by:clawUser, name:name, description:desc, fresh_catch:clawFC, links:[l1,l2,l3,l4,l5,l6].filter(Boolean).join(',') };
   clawG('send-trend').disabled = true;
   clawStatus('riding the wave...', '', 'trend');
   try {
     var r = await Promise.all([
-      fetch(WEBHOOK_PRIVATE,      {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({content:prv})}),
+      clawToAirtable(prv),
       fetch(WEBHOOK_TREND_PUBLIC, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({content:pub})})
     ]);
     if (r[0].ok && r[1].ok) {
